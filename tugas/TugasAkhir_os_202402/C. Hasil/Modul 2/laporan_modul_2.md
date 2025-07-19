@@ -88,10 +88,11 @@ Masalah ini muncul saat proses dijalankan **tanpa stack kernel (`kstack`)**, seh
 ```c
 proc = p; // ❌ Salah: menggunakan variabel global proc
 
+```
+
 📚 Referensi
 Buku xv6 MIT: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf
 
 Repositori xv6-public: https://github.com/mit-pdos/xv6-public
 
 Diskusi praktikum, Stack Overflow, dan dokumentasi Docker Volume
-```
