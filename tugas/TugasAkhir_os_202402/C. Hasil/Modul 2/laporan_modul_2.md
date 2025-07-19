@@ -1,97 +1,102 @@
 # 📝 Laporan Tugas Akhir
 
-**Mata Kuliah**: Sistem Operasi
-**Semester**: Genap / Tahun Ajaran 2024–2025
-**Nama**: `<Nama Lengkap>`
-**NIM**: `<Nomor Induk Mahasiswa>`
-**Modul yang Dikerjakan**:
-`(Contoh: Modul 1 – System Call dan Instrumentasi Kernel)`
+**Mata Kuliah**: Sistem Operasi  
+**Semester**: Genap / Tahun Ajaran 2024–2025  
+**Nama**: `Nurlaela kusumandari `  
+**NIM**: `240202877`  
+**Modul yang Dikerjakan**:  
+Modul 2 – Non-Preemptive Priority Scheduler
 
 ---
 
 ## 📌 Deskripsi Singkat Tugas
 
-Tuliskan deskripsi singkat dari modul yang Anda kerjakan. Misalnya:
+- **Modul 2 – Non-Preemptive Priority Scheduler**:  
+  Mengubah scheduler XV6 default menjadi scheduler berbasis prioritas non-preemptive. Proses dengan nilai `priority` lebih kecil akan dijalankan terlebih dahulu. Nilai prioritas lebih tinggi (angka lebih kecil) berarti lebih diprioritaskan.
 
-* **Modul 1 – System Call dan Instrumentasi Kernel**:
-  Menambahkan dua system call baru, yaitu `getpinfo()` untuk melihat proses yang aktif dan `getReadCount()` untuk menghitung jumlah pemanggilan `read()` sejak boot.
 ---
 
 ## 🛠️ Rincian Implementasi
 
-Tuliskan secara ringkas namun jelas apa yang Anda lakukan:
+### Perubahan-perubahan utama:
 
-### Contoh untuk Modul 1:
+✅ **File `proc.h`**
 
-* Menambahkan dua system call baru di file `sysproc.c` dan `syscall.c`
-* Mengedit `user.h`, `usys.S`, dan `syscall.h` untuk mendaftarkan syscall
-* Menambahkan struktur `struct pinfo` di `proc.h`
-* Menambahkan counter `readcount` di kernel
-* Membuat dua program uji: `ptest.c` dan `rtest.c`
+- Menambahkan atribut `int priority` pada `struct proc`.
+
+✅ **File `proc.c`**
+
+- Mengubah fungsi `scheduler()` untuk memilih proses RUNNABLE dengan `priority` terendah.
+- Menghilangkan penggunaan variabel global `proc`; menggantinya dengan `cpu->proc` sesuai konvensi XV6.
+- Memastikan pemilihan proses tidak menyebabkan panic dengan validasi alokasi `kstack`.
+
+✅ **File `ptest.c`**
+
+- Menambahkan program uji `ptest` untuk membuat 2 child dan 1 parent dengan prioritas berbeda.
+
+✅ **Langkah tambahan**
+
+- Build ulang image XV6: `make clean && make qemu-nox`
+- Menyimpan perubahan dalam container Docker dengan volume agar tidak hilang saat restart.
+
 ---
 
 ## ✅ Uji Fungsionalitas
 
-Tuliskan program uji apa saja yang Anda gunakan, misalnya:
+**Program Uji:** `ptest`
 
-* `ptest`: untuk menguji `getpinfo()`
-* `rtest`: untuk menguji `getReadCount()`
-* `cowtest`: untuk menguji fork dengan Copy-on-Write
-* `shmtest`: untuk menguji `shmget()` dan `shmrelease()`
-* `chmodtest`: untuk memastikan file `read-only` tidak bisa ditulis
-* `audit`: untuk melihat isi log system call (jika dijalankan oleh PID 1)
+Program ini membuat proses parent dan 2 child, masing-masing diberi prioritas berbeda.
 
----
+Kode:
 
-## 📷 Hasil Uji
+```c
+int main() {
+  int pid1 = fork();
+  if (pid1 == 0) {
+    setpriority(3);
+    exit();
+  }
 
-Lampirkan hasil uji berupa screenshot atau output terminal. Contoh:
+  int pid2 = fork();
+  if (pid2 == 0) {
+    setpriority(2);
+    exit();
+  }
 
-### 📍 Contoh Output `cowtest`:
-
-```
-Child sees: Y
-Parent sees: X
-```
-
-### 📍 Contoh Output `shmtest`:
-
-```
-Child reads: A
-Parent reads: B
-```
-
-### 📍 Contoh Output `chmodtest`:
+  wait();
+  wait();
+  exit();
+}
 
 ```
-Write blocked as expected
-```
 
-Jika ada screenshot:
+<h2>📷 Hasil Uji</h2>
+📍 Output Terminal XV6
+Screenshot 2025-07-19 at 7.50.53 PM.png
 
-```
-![hasil cowtest](./screenshots/cowtest_output.png)
-```
+<img src="./Screenshot%202025-07-19%20at%207.50.53%20PM.png" alt="Screenshot Terminal" width="600">
 
----
+📝 Output menunjukkan proses dengan prioritas lebih tinggi (angka lebih kecil) dijalankan terlebih dahulu:
+Child 2 (priority 2) → Child 1 (priority 3) → Parent
 
-## ⚠️ Kendala yang Dihadapi
+⚠️ Kendala yang Dihadapi
+❌ Kernel Panic switchuvm: no kstack
+Terjadi saat proses dijalankan tanpa stack kernel (kstack) karena kesalahan pada scheduler:
 
-Tuliskan kendala (jika ada), misalnya:
+c
+Salin kode
+proc = p;
+✅ Solusi: mengganti dengan:
 
-* Salah implementasi `page fault` menyebabkan panic
-* Salah memetakan alamat shared memory ke USERTOP
-* Proses biasa bisa akses audit log (belum ada validasi PID)
+c
+Salin kode
+cpu->proc = p;
+❌ Menggunakan variabel global proc yang bertabrakan dengan mekanisme per-CPU milik XV6.
+✅ Solusi: menghapus extern struct proc \*proc dan mengganti semua akses ke cpu->proc.
 
----
+📚 Referensi
+Buku xv6 MIT: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf
 
-## 📚 Referensi
+Repositori xv6-public: https://github.com/mit-pdos/xv6-public
 
-Tuliskan sumber referensi yang Anda gunakan, misalnya:
-
-* Buku xv6 MIT: [https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf](https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf)
-* Repositori xv6-public: [https://github.com/mit-pdos/xv6-public](https://github.com/mit-pdos/xv6-public)
-* Stack Overflow, GitHub Issues, diskusi praktikum
-
----
-
+Diskusi praktikum, Stack Overflow, dan dokumentasi Docker Volume
