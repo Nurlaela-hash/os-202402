@@ -79,20 +79,14 @@ Screenshot 2025-07-19 at 7.50.53 PM.png
 📝 Output menunjukkan proses dengan prioritas lebih tinggi (angka lebih kecil) dijalankan terlebih dahulu:
 Child 2 (priority 2) → Child 1 (priority 3) → Parent
 
-⚠️ Kendala yang Dihadapi
-❌ Kernel Panic switchuvm: no kstack
-Terjadi saat proses dijalankan tanpa stack kernel (kstack) karena kesalahan pada scheduler:
+## ⚠️ Kendala yang Dihadapi
 
-c
-Salin kode
-proc = p;
-✅ Solusi: mengganti dengan:
+### ❌ Kernel Panic: `switchuvm: no kstack`
 
-c
-Salin kode
-cpu->proc = p;
-❌ Menggunakan variabel global proc yang bertabrakan dengan mekanisme per-CPU milik XV6.
-✅ Solusi: menghapus extern struct proc \*proc dan mengganti semua akses ke cpu->proc.
+Masalah ini muncul saat proses dijalankan **tanpa stack kernel (`kstack`)**, sehingga terjadi panic saat switch context. Hal ini disebabkan oleh kesalahan pada implementasi scheduler, yaitu:
+
+```c
+proc = p; // ❌ Salah: menggunakan variabel global proc
 
 📚 Referensi
 Buku xv6 MIT: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf
@@ -100,3 +94,4 @@ Buku xv6 MIT: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf
 Repositori xv6-public: https://github.com/mit-pdos/xv6-public
 
 Diskusi praktikum, Stack Overflow, dan dokumentasi Docker Volume
+```
