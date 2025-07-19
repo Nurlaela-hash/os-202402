@@ -1,97 +1,91 @@
 # 📝 Laporan Tugas Akhir
 
-**Mata Kuliah**: Sistem Operasi
-**Semester**: Genap / Tahun Ajaran 2024–2025
-**Nama**: `<Nama Lengkap>`
-**NIM**: `<Nomor Induk Mahasiswa>`
-**Modul yang Dikerjakan**:
-`(Contoh: Modul 1 – System Call dan Instrumentasi Kernel)`
+**Mata Kuliah**: Sistem Operasi  
+**Semester**: Genap / Tahun Ajaran 2024–2025  
+**Nama**: `<Dimas Aris Pangestu>`  
+**NIM**: `<Nomor Induk Mahasiswa>`  
+**Modul yang Dikerjakan**:  
+Modul 1 – System Call dan Instrumentasi Kernel
 
 ---
 
 ## 📌 Deskripsi Singkat Tugas
 
-Tuliskan deskripsi singkat dari modul yang Anda kerjakan. Misalnya:
+**Modul 1 – System Call dan Instrumentasi Kernel**:  
+Pada modul ini, saya menambahkan dua system call baru pada kernel XV6, yaitu:
 
-* **Modul 1 – System Call dan Instrumentasi Kernel**:
-  Menambahkan dua system call baru, yaitu `getpinfo()` untuk melihat proses yang aktif dan `getReadCount()` untuk menghitung jumlah pemanggilan `read()` sejak boot.
+- `getpinfo()` – Menampilkan daftar proses aktif beserta PID, penggunaan memori, dan nama proses.
+- `getReadCount()` – Mengembalikan jumlah pemanggilan system call `read()` sejak sistem booting.
+
 ---
 
 ## 🛠️ Rincian Implementasi
 
-Tuliskan secara ringkas namun jelas apa yang Anda lakukan:
+### ✅ Penambahan Fitur
 
-### Contoh untuk Modul 1:
+- **`getpinfo()`**:
 
-* Menambahkan dua system call baru di file `sysproc.c` dan `syscall.c`
-* Mengedit `user.h`, `usys.S`, dan `syscall.h` untuk mendaftarkan syscall
-* Menambahkan struktur `struct pinfo` di `proc.h`
-* Menambahkan counter `readcount` di kernel
-* Membuat dua program uji: `ptest.c` dan `rtest.c`
+  - Ditambahkan pada `proc.c` untuk menelusuri seluruh proses dalam ptable.
+  - Menggunakan struktur baru `struct pinfo` untuk menyimpan informasi proses.
+  - Proses user dapat mengambil data ini dengan memanggil syscall.
+
+- **`getReadCount()`**:
+  - Menambahkan counter global `readcount` di kernel.
+  - Setiap kali system call `read()` dipanggil, counter ditambahkan.
+  - Bisa diakses user melalui syscall.
+
+### 📂 File yang Dimodifikasi
+
+- `proc.c`:
+
+  - Menambahkan fungsi `getpinfo()`
+  - Menambahkan deklarasi untuk `initproc`, `nextpid`, dan fungsi lainnya agar tidak terjadi error build.
+
+- `proc.h`:
+
+  - Menambahkan struktur `struct pinfo`
+  - Menambahkan deklarasi fungsi `getpinfo(void)` dan counter `readcount`.
+
+- `sysproc.c`:
+
+  - Menambahkan definisi syscall `sys_getpinfo()` dan `sys_getReadCount()`.
+
+- `syscall.c`:
+
+  - Menambahkan entry syscall baru untuk `SYS_getpinfo` dan `SYS_getReadCount`.
+
+- `syscall.h`:
+
+  - Menambahkan `#define SYS_getpinfo 23`
+  - Menambahkan `#define SYS_getReadCount 24`
+
+- `usys.S`:
+
+  - Menambahkan stub syscall: `SYSCALL(getpinfo)` dan `SYSCALL(getReadCount)`
+
+- `user.h`:
+  - Menambahkan deklarasi `int getpinfo(void);` dan `int getReadCount(void);`
+
+### 🧪 Program Uji
+
+- `ptest.c`: Untuk menampilkan proses aktif (menggunakan `getpinfo()`).
+- `rtest.c`: Untuk menguji counter system call `read()`.
+
 ---
 
 ## ✅ Uji Fungsionalitas
 
-Tuliskan program uji apa saja yang Anda gunakan, misalnya:
+**Berhasil dilakukan pengujian tanpa error.**
 
-* `ptest`: untuk menguji `getpinfo()`
-* `rtest`: untuk menguji `getReadCount()`
-* `cowtest`: untuk menguji fork dengan Copy-on-Write
-* `shmtest`: untuk menguji `shmget()` dan `shmrelease()`
-* `chmodtest`: untuk memastikan file `read-only` tidak bisa ditulis
-* `audit`: untuk melihat isi log system call (jika dijalankan oleh PID 1)
+### 📍 Output `ptest`:
 
----
+PID MEM NAME
+1 12288 init
+2 16384 sh
+3 12288 ptest
 
-## 📷 Hasil Uji
+### 📍 Output `rtest`:
 
-Lampirkan hasil uji berupa screenshot atau output terminal. Contoh:
+Read Count Sebelum: 12
 
-### 📍 Contoh Output `cowtest`:
-
-```
-Child sees: Y
-Parent sees: X
-```
-
-### 📍 Contoh Output `shmtest`:
-
-```
-Child reads: A
-Parent reads: B
-```
-
-### 📍 Contoh Output `chmodtest`:
-
-```
-Write blocked as expected
-```
-
-Jika ada screenshot:
-
-```
-![hasil cowtest](./screenshots/cowtest_output.png)
-```
-
----
-
-## ⚠️ Kendala yang Dihadapi
-
-Tuliskan kendala (jika ada), misalnya:
-
-* Salah implementasi `page fault` menyebabkan panic
-* Salah memetakan alamat shared memory ke USERTOP
-* Proses biasa bisa akses audit log (belum ada validasi PID)
-
----
-
-## 📚 Referensi
-
-Tuliskan sumber referensi yang Anda gunakan, misalnya:
-
-* Buku xv6 MIT: [https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf](https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf)
-* Repositori xv6-public: [https://github.com/mit-pdos/xv6-public](https://github.com/mit-pdos/xv6-public)
-* Stack Overflow, GitHub Issues, diskusi praktikum
-
----
-
+Read Count Setelah: 13
